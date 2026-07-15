@@ -363,13 +363,13 @@ function TaskForm() {
 
           <label>Description</label>
 
-          <textarea
+          <input
 
-              rows="4"
+              type="text"
 
-              value={description}
+              value={taskName}
 
-              onChange={(e)=>setDescription(e.target.value)}
+              onChange={(e)=>setTaskName(e.target.value)}
 
           />
 
@@ -647,48 +647,6 @@ function TaskForm() {
 
           <br /><br />
 
-          <div
-
-              style={{
-
-                  background:"#f4f6f8",
-
-                  padding:20,
-
-                  borderRadius:12,
-
-                  marginBottom:20
-
-              }}
-
-          >
-
-              <h3>🤖 AI Recommendation</h3>
-
-              <p>
-
-                  <b>Estimated Duration :</b>
-
-                  {" "}
-
-                  {estimatedDays}
-
-                  {" "}Days
-
-              </p>
-
-              <p>
-
-                  <b>Recommended Deadline :</b>
-
-                  {" "}
-
-                  {recommendedDeadline}
-
-              </p>
-
-          </div>
-
           <label>Deadline</label>
 
           <input
@@ -714,9 +672,7 @@ function TaskForm() {
           </button>
 
       </div>
-
   );
-
 }
 
 export default TaskForm;
