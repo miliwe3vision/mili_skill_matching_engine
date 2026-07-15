@@ -34,13 +34,28 @@ def move_completed_tasks():
         ).data
 
         if exists:
+            print(f"Task '{task['task_name']}' already archived.")
             continue
+
+        # ----------------------------------------
+        # Fetch Assignment Details
+        # ----------------------------------------
+
+        assignment = (
+            supabase
+            .table("task_assignment")
+            .select("*")
+            .eq("task_id", task["id"])
+            .execute()
+        ).data
+
+        assignment_data = assignment[0] if assignment else {}
 
         # ----------------------------------------
         # Insert into task_completed
         # ----------------------------------------
 
-        (
+        response = (
             supabase
             .table("task_completed")
             .insert({
@@ -56,14 +71,53 @@ def move_completed_tasks():
                 "deadline": task["deadline"],
                 "priority": task["priority"],
                 "complexity": task["complexity"],
-                "status": task["status"]
+                "status": task["status"],
+
+                # Assignment Details
+                "emp_id": assignment_data.get("emp_id"),
+                "employee_name": assignment_data.get("employee_name"),
+                "similarity_score": assignment_data.get("similarity_score"),
+                "workload_score": assignment_data.get("workload_score"),
+                "final_score": assignment_data.get("final_score")
 
             })
             .execute()
         )
 
         # ----------------------------------------
-        # Delete from tasks table
+        # If insert failed, don't delete anything
+        # ----------------------------------------
+
+        if not response.data:
+            print(f"Failed to archive task '{task['task_name']}'.")
+            continue
+
+        # ----------------------------------------
+        # Delete Active Assignment
+        # ----------------------------------------
+
+        (
+            supabase
+            .table("task_assignment")
+            .delete()
+            .eq("task_id", task["id"])
+            .execute()
+        )
+
+        # ----------------------------------------
+        # Delete Employee Workload
+        # ----------------------------------------
+
+        (
+            supabase
+            .table("employee_workload")
+            .delete()
+            .eq("task_id", task["id"])
+            .execute()
+        )
+
+        # ----------------------------------------
+        # Delete Task
         # ----------------------------------------
 
         (
@@ -76,4 +130,4 @@ def move_completed_tasks():
 
         print(f"✓ {task['task_name']} moved to task_completed.")
 
-    print("Completed task migration finished.")
+    print("\nCompleted task migration finished.")

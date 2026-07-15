@@ -7,23 +7,11 @@ def save_assignments(assignments):
         print("\nNo task assignments generated.")
         return
 
-    # ----------------------------------------
-    # Remove previous assignments
-    # ----------------------------------------
-
-    (
-        supabase
-        .table("task_assignment")
-        .delete()
-        .neq("emp_id", 0)
-        .execute()
-    )
-
-    # ----------------------------------------
-    # Build records matching table schema
-    # ----------------------------------------
-
     records = []
+
+    # ----------------------------------------
+    # Build Records
+    # ----------------------------------------
 
     for assignment in assignments:
 
@@ -46,15 +34,53 @@ def save_assignments(assignments):
         })
 
     # ----------------------------------------
-    # Insert Assignments
+    # Save Assignments
     # ----------------------------------------
 
-    (
-        supabase
-        .table("task_assignment")
-        .insert(records)
-        .execute()
-    )
+    for record in records:
+
+        # Check whether assignment already exists
+        existing = (
+            supabase
+            .table("task_assignment")
+            .select("task_id")
+            .eq("task_id", record["task_id"])
+            .execute()
+        ).data
+
+        if existing:
+
+            # Update existing assignment
+            (
+                supabase
+                .table("task_assignment")
+                .update({
+
+                    "task_name": record["task_name"],
+                    "emp_id": record["emp_id"],
+                    "employee_name": record["employee_name"],
+                    "similarity_score": record["similarity_score"],
+                    "workload_score": record["workload_score"],
+                    "final_score": record["final_score"]
+
+                })
+                .eq("task_id", record["task_id"])
+                .execute()
+            )
+
+        else:
+
+            # Insert new assignment
+            (
+                supabase
+                .table("task_assignment")
+                .insert(record)
+                .execute()
+            )
+
+    # ----------------------------------------
+    # Console Output
+    # ----------------------------------------
 
     print("\n" + "=" * 70)
     print("FINAL TASK ASSIGNMENTS")

@@ -18,6 +18,10 @@ def assign_tasks():
         .execute()
     ).data
 
+    if not matches:
+        print("No employee-task matches found.")
+        return []
+
     # ----------------------------------------
     # Fetch Pending Tasks
     # ----------------------------------------
@@ -35,11 +39,11 @@ def assign_tasks():
         for task in pending_tasks
     }
 
-    candidates = []
-
     # ----------------------------------------
     # Build Candidate List
     # ----------------------------------------
+
+    candidates = []
 
     for row in matches:
 
@@ -69,7 +73,7 @@ def assign_tasks():
         })
 
     # ----------------------------------------
-    # Highest Final Score First
+    # Sort by Highest Similarity
     # ----------------------------------------
 
     candidates.sort(
@@ -95,7 +99,7 @@ def assign_tasks():
             continue
 
         # ----------------------------------------
-        # Verify task still Pending
+        # Verify task is still Pending
         # ----------------------------------------
 
         task = (
@@ -114,28 +118,41 @@ def assign_tasks():
             continue
 
         # ----------------------------------------
-        # Calculate Workload
+        # Generate Workload
         # ----------------------------------------
 
-        workload_data = generate_employee_workload(
+        try:
 
-            emp_id=row["emp_id"],
+            workload = generate_employee_workload(
 
-            task_id=row["task_id"],
+                emp_id=row["emp_id"],
 
-            similarity_score=row["similarity_score"]
+                task_id=row["task_id"],
 
-        )
+                similarity_score=row["similarity_score"]
+
+            )
+
+        except Exception as e:
+
+            print(
+                f"Workload calculation failed for "
+                f"{row['employee_name']} : {e}"
+            )
+
+            continue
+
+        # ----------------------------------------
+        # Update Scores
+        # ----------------------------------------
 
         row["workload_score"] = round(
-            float(workload_data["workload_score"]), 2
+            float(workload["workload_score"]), 2
         )
 
         row["final_score"] = round(
-            float(workload_data["final_workload_score"]), 2
+            float(workload["final_workload_score"]), 2
         )
-
-        final_assignments.append(row)
 
         # ----------------------------------------
         # Update Task Status
@@ -145,13 +162,34 @@ def assign_tasks():
             supabase
             .table("tasks")
             .update({
+
                 "status": "Assigned"
+
             })
             .eq("id", row["task_id"])
             .execute()
         )
 
+        final_assignments.append(row)
+
         assigned_employees.add(row["emp_id"])
         assigned_tasks.add(row["task_id"])
+
+        print(
+            f"✓ Assigned "
+            f"{row['employee_name']} "
+            f"→ {row['task_name']} "
+            f"(Final Score: {row['final_score']})"
+        )
+
+    # ----------------------------------------
+    # Summary
+    # ----------------------------------------
+
+    print("\n" + "=" * 70)
+    print("TASK ASSIGNMENT COMPLETED")
+    print("=" * 70)
+    print(f"Assigned Tasks : {len(final_assignments)}")
+    print("=" * 70)
 
     return final_assignments
