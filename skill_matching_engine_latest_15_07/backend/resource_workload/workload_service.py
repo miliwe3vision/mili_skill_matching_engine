@@ -71,20 +71,45 @@ def generate_employee_workload(
     # Fetch Task Details
     # ----------------------------------------
 
+    #task = (
+    #    supabase
+    #    .table("tasks")
+    #    .select(
+    #        "starting_date, deadline"
+    #    )
+    #    .eq("id", task_id)
+    #    .single()
+    #    .execute()
+    #)
+
+    #starting_date = task.data["starting_date"]
+
+    #deadline = task.data["deadline"]
+    
+    #-----15/07/2026---------------------start------------------ mili add this code 
     task = (
         supabase
         .table("tasks")
-        .select(
-            "starting_date, deadline"
-        )
+        .select("""
+            starting_date,
+            deadline,
+            priority,
+            complexity
+        """)
         .eq("id", task_id)
         .single()
         .execute()
     )
 
-    starting_date = task.data["starting_date"]
+    task = task.data
 
-    deadline = task.data["deadline"]
+    starting_date = task["starting_date"]
+    deadline = task["deadline"]
+    priority = task["priority"]
+    complexity = task["complexity"]
+    
+    #-----------15/07/2026------------------------end------------------ mili add this code 
+
 
     # ----------------------------------------
     # Calculate Workload
@@ -93,8 +118,111 @@ def generate_employee_workload(
     result = calculate_employee_scores(
         deadline,
         similarity_score,
-        emp_id  # <--- ADDED THIS ARGUMENT
+        emp_id,  # <--- ADDED THIS ARGUMENT
+        task_id
+
     )
+    #---------15/07/2026-------------------------start------------------ mili add this code 
+
+    # ----------------------------------------
+    # Priority Score
+    # ----------------------------------------
+
+    priority_map = {
+
+        "Critical": 100,
+
+        "High": 80,
+
+        "Medium": 60,
+
+        "Low": 40,
+
+        "Very Low": 20
+
+    }
+    
+    priority_score = priority_map.get(priority, 50)
+    
+    # ----------------------------------------
+    # Complexity Score
+    # ----------------------------------------
+
+    complexity_map = {
+
+        "Very Easy": 50,
+
+        "Easy": 60,
+
+        "Medium": 75,
+
+        "Hard": 90,
+
+        "Expert": 100
+
+    }
+
+    complexity_score = complexity_map.get(complexity, 70)
+    
+     # ----------------------------------------
+    # Deadline Urgency
+    # ----------------------------------------
+
+    days_left = (
+
+        datetime.strptime(deadline, "%Y-%m-%d")
+
+        -
+
+        datetime.today()
+
+    ).days
+
+    if days_left <= 2:
+        urgency_score = 100
+
+    elif days_left <= 5:
+        urgency_score = 90
+
+    elif days_left <= 10:
+        urgency_score = 80
+
+    elif days_left <= 15:
+        urgency_score = 70
+
+    elif days_left <= 20:
+        urgency_score = 60
+
+    else:
+        urgency_score = 50
+
+    # ----------------------------------------
+    # Final Assignment Score
+    # ----------------------------------------
+
+    final_score = (
+
+        similarity_score * 0.45
+
+        +
+
+        result["workload_score"] * 0.25
+
+        +
+
+        priority_score * 0.15
+
+        +
+
+        urgency_score * 0.10
+
+        +
+
+        complexity_score * 0.05
+
+    )
+
+    #-----------15/07/2026------------------------end------------------ mili add this code 
 
     workload_data = {
 
@@ -108,38 +236,60 @@ def generate_employee_workload(
 
         "deadline": deadline,
 
+
+        # Store only original task values
+        # Score calculation remains internal
+
+        "priority": priority,
+
+        "complexity": complexity,
+
+
         "similarity_score": similarity_score,
+
 
         "total_days": result["total_days"],
 
-        "total_task_hours": result["total_task_hours"],
+
+        "total_task_hours":
+            result["total_task_hours"],
+
 
         "total_weekly_available_hours":
             result["total_weekly_available_hours"],
 
+
         "free_hour_before_deadline":
             result["free_hour_before_deadline"],
+
 
         "availability_score":
             result["availability_score"],
 
+
         "active_tasks":
             result["active_tasks"],
+
 
         "task_load":
             result["task_load"],
 
+
         "hours_utilization":
             result["hours_utilization"],
+
 
         "workload_score":
             result["workload_score"],
 
+
         "resource_balancing_score":
             result["resource_balancing_score"],
 
+
         "final_workload_score":
             result["final_workload_score"],
+
 
         "updated_at":
             datetime.utcnow().isoformat()

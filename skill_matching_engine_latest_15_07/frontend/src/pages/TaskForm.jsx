@@ -1,320 +1,722 @@
 import { useNavigate } from "react-router-dom";
 import BackButton from "./backbutton";
-import "../styles/style.css";;
+import "../styles/style.css";
 import { useState } from "react";
 
 function TaskForm() {
-  const navigate = useNavigate();
 
-  const [taskName, setTaskName] = useState("");
-  const [description, setDescription] = useState("");
+    const navigate = useNavigate();
 
-  const [technology, setTechnology] = useState("");
-  const [technologies, setTechnologies] = useState([]);
-  const [showTechInput, setShowTechInput] = useState(true);
+    //----------------------------
+    // Task Details
+    //----------------------------
 
-  const [tool, setTool] = useState("");
-  const [tools, setTools] = useState([]);
-  const [showToolInput, setShowToolInput] = useState(true);
+    const [taskName, setTaskName] = useState("");
+    const [description, setDescription] = useState("");
 
-  const [deadline, setDeadline] = useState("");
-  const [startingDate, setStartingDate] = useState("");
+    //----------------------------
+    // Technologies
+    //----------------------------
 
-  // NEW
-  const [complexity, setComplexity] = useState("");
-  const [priority, setPriority] = useState("");
+    const [technology, setTechnology] = useState("");
+    const [technologies, setTechnologies] = useState([]);
+    const [showTechInput, setShowTechInput] = useState(true);
 
-  // ===========================
-  // Add Technology
-  // ===========================
-  const handleTechnology = (e) => {
-    if (e.key === "Enter" && technology.trim() !== "") {
-      e.preventDefault();
+    //----------------------------
+    // Tools
+    //----------------------------
 
-      setTechnologies([...technologies, technology.trim()]);
-      setTechnology("");
-      setShowTechInput(false);
-    }
-  };
+    const [tool, setTool] = useState("");
+    const [tools, setTools] = useState([]);
+    const [showToolInput, setShowToolInput] = useState(true);
 
-  // ===========================
-  // Add Tool
-  // ===========================
-  const handleTool = (e) => {
-    if (e.key === "Enter" && tool.trim() !== "") {
-      e.preventDefault();
+    //----------------------------
+    // Dates
+    //----------------------------
 
-      setTools([...tools, tool.trim()]);
-      setTool("");
-      setShowToolInput(false);
-    }
-  };
+    const [startingDate, setStartingDate] = useState("");
+    const [deadline, setDeadline] = useState("");
 
-  // ===========================
-  // Remove Technology
-  // ===========================
-  const removeTechnology = (index) => {
-    setTechnologies(technologies.filter((_, i) => i !== index));
-  };
+    //----------------------------
+    // AI Recommendation
+    //----------------------------
 
-  // ===========================
-  // Remove Tool
-  // ===========================
-  const removeTool = (index) => {
-    setTools(tools.filter((_, i) => i !== index));
-  };
+    const [complexity, setComplexity] = useState("");
+    const [priority, setPriority] = useState("");
 
-  // ===========================
-  // Submit Task
-  // ===========================
-  const handleConfirm = async () => {
-    if (
-      !taskName ||
-      !description ||
-      technologies.length === 0 ||
-      tools.length === 0 ||
-      !complexity ||
-      !priority ||
-      !startingDate ||
-      !deadline
-    ) {
-      alert("Please fill all required fields.");
-      return;
-    }
+    const [estimatedDays, setEstimatedDays] = useState(0);
 
-    const taskData = {
-      task_name: taskName,
-      description: description,
-      technologies: technologies,
-      tools_and_ide: tools,
-      complexity: complexity,
-      priority: priority,
-      starting_date: startingDate,
-      deadline: deadline,
+    const [recommendedDeadline, setRecommendedDeadline] = useState("");
+
+    //--------------------------------------------------
+    // AI Schedule Generator
+    //--------------------------------------------------
+
+    const calculateSchedule = (
+        priority,
+        complexity,
+        startDate
+    ) => {
+
+        if (!priority || !complexity || !startDate)
+            return;
+
+        let duration = 5;
+
+        //-----------------------------------
+        // Complexity
+        //-----------------------------------
+
+        switch (complexity) {
+
+            case "Very Easy":
+                duration = 2;
+                break;
+
+            case "Easy":
+                duration = 5;
+                break;
+
+            case "Medium":
+                duration = 10;
+                break;
+
+            case "Hard":
+                duration = 18;
+                break;
+
+            case "Expert":
+                duration = 30;
+                break;
+
+            default:
+                duration = 10;
+        }
+
+        //-----------------------------------
+        // Priority
+        //-----------------------------------
+
+        switch (priority) {
+
+            case "Critical":
+                duration -= 4;
+                break;
+
+            case "High":
+                duration -= 2;
+                break;
+
+            case "Medium":
+                break;
+
+            case "Low":
+                duration += 2;
+                break;
+
+            case "Very Low":
+                duration += 5;
+                break;
+        }
+
+        if (duration < 1)
+            duration = 1;
+
+        const date = new Date(startDate);
+
+        date.setDate(
+            date.getDate() + duration
+        );
+
+        const deadlineValue =
+            date.toISOString().split("T")[0];
+
+        setEstimatedDays(duration);
+
+        setDeadline(deadlineValue);
+
+        setRecommendedDeadline(
+            date.toLocaleDateString()
+        );
     };
 
-    console.log("Sending Task:", taskData);
+    //--------------------------------------------------
+    // Technology
+    //--------------------------------------------------
 
-    try {
-      const response = await fetch("http://127.0.0.1:8000/task", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(taskData),
-      });
+    const handleTechnology = (e) => {
 
-      const result = await response.json();
+        if (
+            e.key === "Enter" &&
+            technology.trim() !== ""
+        ) {
 
-      console.log(result);
+            e.preventDefault();
 
-      if (!response.ok) {
-        alert(result.detail || "Task creation failed.");
-        return;
+            setTechnologies([
+                ...technologies,
+                technology.trim()
+            ]);
+
+            setTechnology("");
+
+            setShowTechInput(false);
+        }
+    };
+
+    const removeTechnology = (index) => {
+
+        setTechnologies(
+
+            technologies.filter(
+                (_, i) => i !== index
+            )
+
+        );
+
+    };
+
+    //--------------------------------------------------
+    // Tools
+    //--------------------------------------------------
+
+    const handleTool = (e) => {
+
+        if (
+            e.key === "Enter" &&
+            tool.trim() !== ""
+        ) {
+
+            e.preventDefault();
+
+            setTools([
+                ...tools,
+                tool.trim()
+            ]);
+
+            setTool("");
+
+            setShowToolInput(false);
+
+        }
+
+    };
+
+    const removeTool = (index) => {
+
+        setTools(
+
+            tools.filter(
+                (_, i) => i !== index
+            )
+
+        );
+
+    };
+
+    //--------------------------------------------------
+    // Submit Task
+    //--------------------------------------------------
+
+    const handleConfirm = async () => {
+
+      if (
+
+          !taskName ||
+
+          !description ||
+
+          technologies.length === 0 ||
+
+          tools.length === 0 ||
+
+          !complexity ||
+
+          !priority ||
+
+          !startingDate ||
+
+          !deadline
+
+      ) {
+
+          alert("Please fill all required fields.");
+
+          return;
+
       }
 
-      alert("Task created successfully!");
+      const taskData = {
 
-      // Clear form
-      setTaskName("");
-      setDescription("");
-      setTechnology("");
-      setTechnologies([]);
-      setShowTechInput(true);
-      setTool("");
-      setTools([]);
-      setShowToolInput(true);
-      setComplexity("");
-      setPriority("");
-      setStartingDate("");
-      setDeadline("");
+          task_name: taskName,
 
-      navigate("/admin");
+          description: description,
 
-    } catch (error) {
-      console.error("Error:", error);
-      alert("Unable to connect to backend.");
-    }
+          technologies: technologies,
+
+          tools_and_ide: tools,
+
+          complexity: complexity,
+
+          priority: priority,
+
+          starting_date: startingDate,
+
+          deadline: deadline,
+
+          duration_days: estimatedDays
+
+      };
+
+      console.log("Task Data :", taskData);
+
+      try {
+
+          const response = await fetch(
+
+              "http://127.0.0.1:8000/task",
+
+              {
+
+                  method: "POST",
+
+                  headers: {
+
+                      "Content-Type": "application/json"
+
+                  },
+
+                  body: JSON.stringify(taskData)
+
+              }
+
+          );
+
+          const result = await response.json();
+
+          if (!response.ok) {
+
+              alert(result.detail || "Unable to create task.");
+
+              return;
+
+          }
+
+          alert("Task Created Successfully");
+
+          setTaskName("");
+          setDescription("");
+
+          setTechnology("");
+          setTechnologies([]);
+          setShowTechInput(true);
+
+          setTool("");
+          setTools([]);
+          setShowToolInput(true);
+
+          setComplexity("");
+          setPriority("");
+
+          setStartingDate("");
+          setDeadline("");
+
+          setEstimatedDays(0);
+
+          setRecommendedDeadline("");
+
+          navigate("/admin");
+
+      }
+
+      catch (err) {
+
+          console.log(err);
+
+          alert("Backend Error");
+
+      }
+
   };
 
   return (
-    <div className="container">
-         <BackButton />
-      <h1>Task Requirements</h1>
 
-      <label>Task Name</label>
-      <input
-        type="text"
-        value={taskName}
-        onChange={(e) => setTaskName(e.target.value)}
-        required
-      />
+      <div className="container">
 
-      <br />
-      <br />
+          <BackButton />
 
-      <label>Description</label>
-      <input
-        type="text"
-        value={description}
-        onChange={(e) => setDescription(e.target.value)}
-        required
-      />
+          <h1>Task Requirements</h1>
 
-      <br />
-      <br />
+          <label>Task Name</label>
 
-      <label>Technologies</label>
+          <input
 
-      <br />
-      <br />
+              type="text"
 
-      {showTechInput && (
-        <input
-          type="text"
-          placeholder="Enter technology"
-          value={technology}
-          onChange={(e) => setTechnology(e.target.value)}
-          onKeyDown={handleTechnology}
-          required
-        />
-      )}
+              value={taskName}
 
-      <div>
-        {technologies.map((tech, index) => (
-          <span
-            key={index}
-            style={{
-              margin: "5px",
-              padding: "8px",
-              border: "1px solid black",
-              display: "inline-block",
-            }}
+              onChange={(e)=>setTaskName(e.target.value)}
+
+          />
+
+          <br /><br />
+
+          <label>Description</label>
+
+          <textarea
+
+              rows="4"
+
+              value={description}
+
+              onChange={(e)=>setDescription(e.target.value)}
+
+          />
+
+          <br /><br />
+
+          <label>Technologies</label>
+
+          <br /><br />
+
+          {
+
+              showTechInput &&
+
+              <input
+
+                  type="text"
+
+                  placeholder="Press Enter"
+
+                  value={technology}
+
+                  onChange={(e)=>setTechnology(e.target.value)}
+
+                  onKeyDown={handleTechnology}
+
+              />
+
+          }
+
+          <div>
+
+              {
+
+                  technologies.map((item,index)=>(
+
+                      <span
+
+                          key={index}
+
+                          style={{
+
+                              margin:5,
+
+                              padding:8,
+
+                              border:"1px solid black",
+
+                              display:"inline-block"
+
+                          }}
+
+                      >
+
+                          {item}
+
+                          <button
+
+                              onClick={()=>removeTechnology(index)}
+
+                          >
+
+                              ✖
+
+                          </button>
+
+                      </span>
+
+                  ))
+
+              }
+
+              <button
+
+                  type="button"
+
+                  onClick={()=>setShowTechInput(true)}
+
+              >
+
+                  +
+
+              </button>
+
+          </div>
+
+          <br /><br />
+
+          <label>Tools / IDE</label>
+
+          <br /><br />
+
+          {
+
+              showToolInput &&
+
+              <input
+
+                  type="text"
+
+                  placeholder="Press Enter"
+
+                  value={tool}
+
+                  onChange={(e)=>setTool(e.target.value)}
+
+                  onKeyDown={handleTool}
+
+              />
+
+          }
+
+          <div>
+
+              {
+
+                  tools.map((item,index)=>(
+
+                      <span
+
+                          key={index}
+
+                          style={{
+
+                              margin:5,
+
+                              padding:8,
+
+                              border:"1px solid black",
+
+                              display:"inline-block"
+
+                          }}
+
+                      >
+
+                          {item}
+
+                          <button
+
+                              onClick={()=>removeTool(index)}
+
+                          >
+
+                              ✖
+
+                          </button>
+
+                      </span>
+
+                  ))
+
+              }
+
+              <button
+
+                  type="button"
+
+                  onClick={()=>setShowToolInput(true)}
+
+              >
+
+                  +
+
+              </button>
+
+          </div>
+
+          <br /><br />
+
+          <label>Complexity</label>
+
+          <select
+
+              value={complexity}
+
+              onChange={(e)=>{
+
+                  setComplexity(e.target.value);
+
+                  calculateSchedule(
+
+                      priority,
+
+                      e.target.value,
+
+                      startingDate
+
+                  );
+
+              }}
+
           >
-            {tech}
-            <button onClick={() => removeTechnology(index)}>✖</button>
-          </span>
-        ))}
 
-        <button
-          type="button"
-          onClick={() => setShowTechInput(true)}
-        >
-          +
-        </button>
+              <option value="">Select Complexity</option>
+
+              <option value="Very Easy">Very Easy</option>
+
+              <option value="Easy">Easy</option>
+
+              <option value="Medium">Medium</option>
+
+              <option value="Hard">Hard</option>
+
+              <option value="Expert">Expert</option>
+
+          </select>
+
+          <br /><br />
+
+          <label>Priority</label>
+
+          <select
+
+              value={priority}
+
+              onChange={(e)=>{
+
+                  setPriority(e.target.value);
+
+                  calculateSchedule(
+
+                      e.target.value,
+
+                      complexity,
+
+                      startingDate
+
+                  );
+
+              }}
+
+          >
+
+              <option value="">Select Priority</option>
+
+              <option value="Critical">Critical</option>
+
+              <option value="High">High</option>
+
+              <option value="Medium">Medium</option>
+
+              <option value="Low">Low</option>
+
+              <option value="Very Low">Very Low</option>
+
+          </select>
+
+          <br /><br />
+
+          <label>Starting Date</label>
+
+          <input
+
+              type="date"
+
+              value={startingDate}
+
+              onChange={(e)=>{
+
+                  setStartingDate(e.target.value);
+
+                  calculateSchedule(
+
+                      priority,
+
+                      complexity,
+
+                      e.target.value
+
+                  );
+
+              }}
+
+          />
+
+          <br /><br />
+
+          <div
+
+              style={{
+
+                  background:"#f4f6f8",
+
+                  padding:20,
+
+                  borderRadius:12,
+
+                  marginBottom:20
+
+              }}
+
+          >
+
+              <h3>🤖 AI Recommendation</h3>
+
+              <p>
+
+                  <b>Estimated Duration :</b>
+
+                  {" "}
+
+                  {estimatedDays}
+
+                  {" "}Days
+
+              </p>
+
+              <p>
+
+                  <b>Recommended Deadline :</b>
+
+                  {" "}
+
+                  {recommendedDeadline}
+
+              </p>
+
+          </div>
+
+          <label>Deadline</label>
+
+          <input
+
+              type="date"
+
+              value={deadline}
+
+              readOnly
+
+          />
+
+          <br /><br />
+
+          <button
+
+              onClick={handleConfirm}
+
+          >
+
+              Confirm
+
+          </button>
+
       </div>
 
-      <br />
-      <br />
-
-      <label>Tools</label>
-
-      <br />
-      <br />
-
-      {showToolInput && (
-        <input
-          type="text"
-          placeholder="Enter tool"
-          value={tool}
-          onChange={(e) => setTool(e.target.value)}
-          onKeyDown={handleTool}
-          required
-        />
-      )}
-
-      <div>
-        {tools.map((item, index) => (
-          <span
-            key={index}
-            style={{
-              margin: "5px",
-              padding: "8px",
-              border: "1px solid black",
-              display: "inline-block",
-            }}
-          >
-            {item}
-            <button onClick={() => removeTool(index)}>✖</button>
-          </span>
-        ))}
-
-        <button
-          type="button"
-          onClick={() => setShowToolInput(true)}
-        >
-          +
-        </button>
-      </div>
-
-      <br />
-      <br />
-
-      <label>Complexity</label>
-
-      <select
-        value={complexity}
-        onChange={(e) => setComplexity(e.target.value)}
-        required
-      >
-        <option value="">Select Complexity</option>
-        <option value="Very Easy">Very Easy</option>
-        <option value="Easy">Easy</option>
-        <option value="Medium">Medium</option>
-        <option value="Hard">Hard</option>
-        <option value="Expert">Expert</option>
-      </select>
-
-      <br />
-      <br />
-
-      <label>Priority</label>
-
-      <select
-        value={priority}
-        onChange={(e) => setPriority(e.target.value)}
-        required
-      >
-        <option value="">Select Priority</option>
-        <option value="Critical">Critical</option>
-        <option value="High">High</option>
-        <option value="Medium">Medium</option>
-        <option value="Low">Low</option>
-        <option value="Very Low">Very Low</option>
-      </select>
-
-      <br />
-      <br />
-
-      <label>Starting Date</label>
-
-      <input
-        type="date"
-        value={startingDate}
-        onChange={(e) => setStartingDate(e.target.value)}
-        required
-      />
-
-      <br />
-      <br />
-
-      <label>Deadline</label>
-
-      <input
-        type="date"
-        value={deadline}
-        onChange={(e) => setDeadline(e.target.value)}
-        required
-      />
-
-      <br />
-      <br />
-
-      <button onClick={handleConfirm}>
-        Confirm
-      </button>
-    </div>
   );
+
 }
 
 export default TaskForm;
