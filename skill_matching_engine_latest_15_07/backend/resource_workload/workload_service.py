@@ -116,12 +116,12 @@ def generate_employee_workload(
     # ----------------------------------------
 
     result = calculate_employee_scores(
-        deadline,
-        similarity_score,
-        emp_id,  # <--- ADDED THIS ARGUMENT
-        task_id
-
-    )
+    starting_date,
+    deadline,
+    similarity_score,
+    emp_id,
+    task_id
+)
     #---------15/07/2026-------------------------start------------------ mili add this code 
 
     # ----------------------------------------

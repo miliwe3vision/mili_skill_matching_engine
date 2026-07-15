@@ -348,30 +348,24 @@ function TaskForm() {
           <h1>Task Requirements</h1>
 
           <label>Task Name</label>
-
-          <input
-
-              type="text"
-
-              value={taskName}
-
-              onChange={(e)=>setTaskName(e.target.value)}
-
-          />
+            <input
+                type="text"
+                placeholder="Enter task name"
+                value={taskName}
+                onChange={(e)=>setTaskName(e.target.value)}
+            />
 
           <br /><br />
 
           <label>Description</label>
 
-          <input
-
-              type="text"
-
-              value={taskName}
-
-              onChange={(e)=>setTaskName(e.target.value)}
-
-          />
+            <input
+            className="task-input"
+            type="text"
+            placeholder="Describe the task..."
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+        />
 
           <br /><br />
 
@@ -649,16 +643,12 @@ function TaskForm() {
 
           <label>Deadline</label>
 
-          <input
-
-              type="date"
-
-              value={deadline}
-
-              readOnly
-
-          />
-
+                <input
+            type="date"
+            value={deadline}
+            onChange={(e) => setDeadline(e.target.value)}
+            min={startingDate}
+        />
           <br /><br />
 
           <button

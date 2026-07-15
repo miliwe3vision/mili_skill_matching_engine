@@ -17,23 +17,14 @@ router = APIRouter()
 # =====================================================
 
 class TaskModel(BaseModel):
-
+    
     task_name: str
-
     description: str
-
     technologies: List[str]
-
     tools_and_ide: List[str]
-
     starting_date: date
-
     deadline: date
-
-    duration_days: int
-
     complexity: str
-
     priority: str
 
 
@@ -45,6 +36,10 @@ class UpdateTaskStatus(BaseModel):
 
     deadline: date
 
+
+# =====================================================
+# CREATE TASK
+# =====================================================
 
 # =====================================================
 # CREATE TASK
@@ -66,6 +61,17 @@ def create_task(task: TaskModel):
     extracted_data = extract_requirements(task_data)
 
     # ----------------------------------------
+    # Calculate Duration
+    # ----------------------------------------
+
+    duration_days = (task.deadline - task.starting_date).days
+
+    if duration_days <= 0:
+        return {
+            "message": "Deadline must be after Starting Date."
+        }
+
+    # ----------------------------------------
     # Build Database Record
     # ----------------------------------------
 
@@ -82,9 +88,8 @@ def create_task(task: TaskModel):
         "required_skills":
             extracted_data["required_skills"],
 
-        # Duration from frontend
         "duration_days":
-            task.duration_days,
+            duration_days,
 
         "starting_date":
             str(task.starting_date),

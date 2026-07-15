@@ -29,16 +29,15 @@ MAXIMUM_ACTIVE_TASKS = 10
 # -----------------------------
 # TOTAL WEEKLY HOURS
 # -----------------------------
-def calculate_total_weekly_hours(today, deadline_date):
-
-    total_days = (deadline_date - today).days
+def calculate_total_weekly_hours(starting_date, deadline_date):
+    
+    total_days = (deadline_date - starting_date).days + 1
 
     weeks = math.ceil(
         total_days / WORKING_DAYS_PER_WEEK
     )
 
     return weeks * WORKING_HOURS_PER_WEEK
-
 
 
 # -----------------------------
@@ -266,9 +265,6 @@ def calculate_workload(
         "priority_score": priority_score
     }
 
-
-
-
 # -----------------------------
 # RESOURCE BALANCE
 # -----------------------------
@@ -284,67 +280,52 @@ def calculate_resource_balance(
 
     resource_balancing_score = (
 
-        availability_score * 0.50
-
+        availability_score * 0.5
         +
-
         remaining_capacity * 0.50
 
     )
-
 
     return round(
         resource_balancing_score,
         2
     )
-
-
-
-
 # -----------------------------
 # FINAL PIPELINE
 # -----------------------------
 def calculate_employee_scores(
+        starting_date,
         deadline,
         skill_matching_score,
         emp_id,
         task_id
 ):
 
-
-    today = datetime.today().date()
-
+    starting_date = datetime.strptime(
+        starting_date,
+        "%Y-%m-%d"
+    ).date()
 
     deadline_date = datetime.strptime(
         deadline,
         "%Y-%m-%d"
     ).date()
 
-
-
-    if deadline_date <= today:
+    if deadline_date <= starting_date:
 
         raise ValueError(
-            "Deadline must be future date."
+            "Deadline must be greater than Starting Date."
         )
-
-
 
     total_days = (
         deadline_date -
-        today
-    ).days
+        starting_date
+    ).days + 1
 
-
-
-    total_weekly_hours = (
-        calculate_total_weekly_hours(
-            today,
-            deadline_date
-        )
+    total_weekly_hours = calculate_total_weekly_hours(
+        starting_date,
+        deadline_date
     )
-
-
 
     # -----------------------------
     # TASK COMPLEXITY + PRIORITY
@@ -354,22 +335,17 @@ def calculate_employee_scores(
         task_id
     )
 
-
     complexity_score = calculate_complexity_score(
         task_details.get(
             "complexity"
         )
     )
 
-
     priority_score = calculate_priority_score(
         task_details.get(
             "priority"
         )
     )
-
-
-
     # -----------------------------
     # ACTIVE TASKS
     # -----------------------------
@@ -378,16 +354,11 @@ def calculate_employee_scores(
         emp_id
     )
 
-
     active_tasks += 1
-
-
 
     availability = calculate_availability(
         total_weekly_hours
     )
-
-
 
     workload = calculate_workload(
 
@@ -402,9 +373,6 @@ def calculate_employee_scores(
         priority_score
 
     )
-
-
-
     resource_score = calculate_resource_balance(
 
         availability["availability_score"],
@@ -412,9 +380,6 @@ def calculate_employee_scores(
         workload["workload_score"]
 
     )
-
-
-
     # -----------------------------
     # SKILL SCORE NORMALIZATION
     # -----------------------------
@@ -422,10 +387,6 @@ def calculate_employee_scores(
     if skill_matching_score <= 1:
 
         skill_matching_score *= 100
-
-
-
-
     # -----------------------------
     # FINAL SCORE
     # -----------------------------
@@ -433,87 +394,55 @@ def calculate_employee_scores(
     final_workload_score = (
 
         skill_matching_score * 0.70
-
         +
-
         resource_score * 0.30
 
     )
-
-
-
 
     return {
 
 
         "deadline": deadline,
-
-
         "total_days": total_days,
-
 
         "total_task_hours":
             total_days *
             WORKING_HOURS_PER_DAY,
 
-
         "total_weekly_available_hours":
             total_weekly_hours,
-
-
         "free_hour_before_deadline":
             availability["free_hours"],
-
-
 
         "availability_score":
             availability["availability_score"],
 
-
-
         "active_tasks":
             active_tasks,
-
-
 
         "task_load":
             workload["task_load_score"],
 
-
-
         "hours_utilization":
             workload["hours_utilization"],
-
-
 
         "complexity_score":
             workload["complexity_score"],
 
-
-
         "priority_score":
             workload["priority_score"],
-
-
 
         "workload_score":
             workload["workload_score"],
 
-
-
         "resource_balancing_score":
             resource_score,
-
-
 
         "skill_matching_score":
             round(
                 skill_matching_score,
                 2
             ),
-
-
-
         "final_workload_score":
             round(
                 final_workload_score,
