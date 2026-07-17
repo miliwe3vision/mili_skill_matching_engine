@@ -13,10 +13,16 @@ from backend.resource_workload.workload_cal import (
 # Employee -> Task assignment.
 # ==========================================================
 
+# def generate_employee_workload(
+#     emp_id,
+#     task_id,
+#     similarity_score
+# ):
 def generate_employee_workload(
     emp_id,
     task_id,
-    similarity_score
+    similarity_score,
+    active_tasks,
 ):
 
     # ======================================================
@@ -116,12 +122,20 @@ def generate_employee_workload(
     # ----------------------------------------
 
     result = calculate_employee_scores(
-    starting_date,
-    deadline,
-    similarity_score,
-    emp_id,
-    task_id
-)
+
+        starting_date=task["starting_date"],
+
+        deadline=task["deadline"],
+
+        skill_matching_score=similarity_score,
+
+        emp_id=emp_id,
+
+        task_id=task_id,
+
+        active_tasks=active_tasks
+
+    )
     #---------15/07/2026-------------------------start------------------ mili add this code 
 
     # ----------------------------------------
