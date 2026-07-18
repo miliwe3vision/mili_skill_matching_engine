@@ -338,7 +338,7 @@ function TaskAssigned() {
 
                         <label>Status</label>
 
-                        {/* <select
+                        <select
 
                             value={task.status}
 
@@ -382,19 +382,7 @@ function TaskAssigned() {
 
                             Deadline
 
-                        </label> */}
-
-                        <select
-                            value={task.status || "Assigned"}
-                            onChange={(e) =>
-                                updateField(index, "status", e.target.value)
-                            }
-                        >
-                            <option value="Assigned">Assigned</option>
-                            <option value="In process">In process</option>
-                            <option value="Extend deadline">Extend deadline</option>
-                            <option value="Completed">Completed</option>
-                        </select>
+                        </label>
 
                         <input
 
