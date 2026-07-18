@@ -21,7 +21,6 @@ def get_employee_vectors():
 
         embedding = employee["embedding"]
 
-        # Convert string -> Python list
         if isinstance(embedding, str):
             employee["embedding"] = ast.literal_eval(embedding)
 
@@ -29,25 +28,51 @@ def get_employee_vectors():
 
 
 # --------------------------------------------------------
-# Fetch Task Vectors
+# Fetch Pending Task Vectors
 # --------------------------------------------------------
 
 def get_task_vectors():
 
-    response = (
+    # ----------------------------------------
+    # Step 1 : Fetch Pending Task IDs
+    # ----------------------------------------
+
+    pending_response = (
         supabase
-        .table("task_vector")
-        .select("*")
+        .table("tasks")
+        .select("id")
+        .eq("status", "Pending")
         .execute()
     )
 
-    task_vectors = response.data
+    pending_tasks = pending_response.data
+
+    if not pending_tasks:
+        return []
+
+    pending_ids = [
+        task["id"]
+        for task in pending_tasks
+    ]
+
+    # ----------------------------------------
+    # Step 2 : Fetch Only Pending Embeddings
+    # ----------------------------------------
+
+    vector_response = (
+        supabase
+        .table("task_vector")
+        .select("*")
+        .in_("task_id", pending_ids)
+        .execute()
+    )
+
+    task_vectors = vector_response.data
 
     for task in task_vectors:
 
         embedding = task["embedding"]
 
-        # Convert string -> Python list
         if isinstance(embedding, str):
             task["embedding"] = ast.literal_eval(embedding)
 

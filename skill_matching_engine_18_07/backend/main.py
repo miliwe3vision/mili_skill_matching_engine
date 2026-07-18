@@ -5,6 +5,8 @@ from backend.routes.auth import router as auth_router
 from backend.routes.employee import router as employee_router
 from backend.routes.task import router as task_router
 from backend.routes.workload_api import router as workload_router
+from backend.routes.task import router as task_router
+
 
 app = FastAPI()
 
@@ -28,3 +30,4 @@ app.include_router(auth_router)
 app.include_router(employee_router)
 app.include_router(task_router)
 app.include_router(workload_router)
+app.include_router(task_router)

@@ -70,17 +70,12 @@ function TaskAssigned() {
         try {
 
             await axios.put(
-
                 "http://127.0.0.1:8000/update-task-status",
-
                 {
-
-                    task_id: task.task_id,   // UUID of tasks table
+                    task_id: task.task_id,
                     status: task.status,
                     deadline: task.deadline
-
                 }
-
             );
 
             alert("Task Updated Successfully");
@@ -89,12 +84,27 @@ function TaskAssigned() {
 
         }
 
-        catch (err) {
+        // catch (err) {
 
-            console.log(err);
+        //     console.log(err);
 
-            alert("Unable to update");
+        //     alert("Unable to update");
 
+        // }
+
+        catch (error) {
+
+            console.log("Full Error:", error);
+        
+            if (error.response) {
+                console.log("Backend Response:", error.response.data);
+                console.log("Status:", error.response.status);
+        
+                alert(JSON.stringify(error.response.data));
+            } else {
+                console.log(error);
+                alert(error.message);
+            }
         }
 
     };

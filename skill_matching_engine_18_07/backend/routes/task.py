@@ -7,6 +7,8 @@ from backend.gemini_services.requirement_extractor import (
     extract_requirements,
 )
 
+
+
 from database.supabase_client import supabase
 
 router = APIRouter()
@@ -373,6 +375,7 @@ def update_task_status(data: UpdateTaskStatus):
         .eq("id", data.task_id)
         .execute()
     )
+    
 
     # ----------------------------------------
     # Stop if not completed
@@ -463,7 +466,9 @@ def update_task_status(data: UpdateTaskStatus):
 
             "employee_name": employee_name,
 
-            "emp_id": emp_id
+            # "emp_id": emp_id
+            
+            "employee_name": employee_name,
 
         })
         .execute()
