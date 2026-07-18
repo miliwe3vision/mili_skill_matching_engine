@@ -36,7 +36,14 @@ def estimate_active_tasks_from_supabase(emp_id):
             .table("task_assignment")
             .select("id", count="exact")
             .eq("emp_id", emp_id)
-            .eq("status", "Assigned")      # Count only active tasks
+            .in_(
+                "status",
+                [
+                    "Assigned",
+                    "In Process",
+                    "Extended deadline"
+                ]
+            )
             .execute()
         )
 
