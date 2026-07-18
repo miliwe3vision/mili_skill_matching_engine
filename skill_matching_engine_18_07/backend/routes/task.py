@@ -490,6 +490,17 @@ def update_task_status(data: UpdateTaskStatus):
     # Remove Employee Workload
     # ----------------------------------------
 
+# (
+#     supabase
+#     .table("employee_workload")
+#     .delete()
+#     .eq("task_id", data.task_id)
+#     .execute()
+# )   
+    # ----------------------------------------
+    # Update Employee Workload
+    # ----------------------------------------
+    # Delete the completed task workload
     (
         supabase
         .table("employee_workload")
@@ -498,6 +509,27 @@ def update_task_status(data: UpdateTaskStatus):
         .execute()
     )
 
+    # Count remaining workload records
+    remaining_workloads = (
+        supabase
+        .table("employee_workload")
+        .select("id")
+        .eq("emp_id", emp_id)
+        .execute()
+    ).data
+
+    remaining_tasks = len(remaining_workloads)
+
+    # Update active_tasks for all remaining tasks
+    (
+        supabase
+        .table("employee_workload")
+        .update({
+            "active_tasks": remaining_tasks
+        })
+        .eq("emp_id", emp_id)
+        .execute()
+    )
     # ----------------------------------------
     # Remove Task
     # ----------------------------------------
