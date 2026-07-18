@@ -29,7 +29,9 @@ def save_assignments(assignments):
 
             "workload_score": assignment["workload_score"],
 
-            "final_score": assignment["final_score"]
+            "final_score": assignment["final_score"],
+            
+            "status": "Assigned",
 
         })
 

@@ -361,10 +361,28 @@ def get_admin_task_assignments():
 @router.put("/update-task-status")
 def update_task_status(data: UpdateTaskStatus):
 
+    # # ----------------------------------------
+    # # Update Status & Deadline
+    # # ----------------------------------------
+
+    # (
+    #     supabase
+    #     .table("tasks")
+    #     .update({
+    #         "status": data.status,
+    #         "deadline": str(data.deadline)
+    #     })
+    #     .eq("id", data.task_id)
+    #     .execute()
+    # )
+    
     # ----------------------------------------
-    # Update Status & Deadline
+    # Update Status & Deadline in tasks table
     # ----------------------------------------
 
+    # ----------------------------------------
+    # Update Tasks Table
+    # ----------------------------------------
     (
         supabase
         .table("tasks")
@@ -375,18 +393,45 @@ def update_task_status(data: UpdateTaskStatus):
         .eq("id", data.task_id)
         .execute()
     )
-    
 
     # ----------------------------------------
-    # Stop if not completed
+    # Update Task Assignment Table
     # ----------------------------------------
+    (
+        supabase
+        .table("task_assignment")
+        .update({
+            "status": data.status
+        })
+        .eq("task_id", data.task_id)
+        .execute()
+    )
 
+    # ----------------------------------------
+    # In Process
+    # ----------------------------------------
+    if data.status == "In process":
+        return {
+            "message": "Task status changed to In process"
+        }
+
+    # ----------------------------------------
+    # Extend Deadline
+    # ----------------------------------------
+    if data.status == "Extend deadline":
+        return {
+            "message": "Deadline extended successfully"
+        }
+
+    # ----------------------------------------
+    # Completed
+    # ----------------------------------------
     if data.status != "Completed":
-
         return {
             "message": "Task Updated Successfully"
         }
 
+    # Remaining Completed logic...
     # ----------------------------------------
     # Fetch Task
     # ----------------------------------------

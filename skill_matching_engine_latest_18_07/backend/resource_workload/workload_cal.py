@@ -24,6 +24,8 @@ def calculate_total_weekly_hours(starting_date, deadline_date):
         total_days / WORKING_DAYS_PER_WEEK
     )
     return weeks * WORKING_HOURS_PER_WEEK
+
+#parita 18-07
 # -----------------------------
 # ACTIVE TASK COUNT
 # -----------------------------
@@ -34,14 +36,17 @@ def estimate_active_tasks_from_supabase(emp_id):
             .table("task_assignment")
             .select("id", count="exact")
             .eq("emp_id", emp_id)
+            .eq("status", "Assigned")      # Count only active tasks
             .execute()
         )
+
         return response.count or 0
+
     except Exception as e:
-        print(
-            f"Error fetching active tasks: {e}"
-        )
+        print(f"Error fetching active tasks: {e}")
         return 0
+    
+#parita 18-07
 # -----------------------------
 # FETCH TASK COMPLEXITY & PRIORITY
 # -----------------------------
@@ -97,38 +102,62 @@ def calculate_priority_score(priority):
         priority,
         50
     )
+
+    
+#parita 18-07
 # -----------------------------
 # AVAILABILITY
 # -----------------------------
-def calculate_availability(total_weekly_hours):
-    free_hours = total_weekly_hours
-    availability_score = 100
+def calculate_availability(
+        total_weekly_hours,
+        total_task_hours
+):
+    free_hours = max(
+        total_weekly_hours - total_task_hours,
+        0
+    )
+
+    availability_score = (
+        free_hours / total_weekly_hours
+    ) * 100 if total_weekly_hours > 0 else 0
+
     return {
         "availability_score": round(
             availability_score,
             2
         ),
-        "free_hours": free_hours,
+
+        "free_hours": round(
+            free_hours,
+            2
+        ),
+
         "weekly_hours": total_weekly_hours
     }
 # -----------------------------
 # WORKLOAD SCORE
 # -----------------------------
 def calculate_workload(
-        total_days,
+        total_assigned_days,
         total_weekly_hours,
         active_tasks,
         complexity_score,
         priority_score
 ):
+
     total_task_hours = (
-        total_days *
+        total_assigned_days *
         WORKING_HOURS_PER_DAY
     )
-    task_load_score = (
-        active_tasks /
-        MAXIMUM_ACTIVE_TASKS
-    ) * 100
+
+    task_load_score = min(
+        (
+            active_tasks /
+            MAXIMUM_ACTIVE_TASKS
+        ) * 100,
+        100
+    )
+
     hours_utilization = min(
         (
             total_task_hours /
@@ -136,32 +165,38 @@ def calculate_workload(
         ) * 100,
         100
     )
-    # Final workload calculation
+
     workload_score = (
-        task_load_score * 0.25
-        +
-        hours_utilization * 0.45
-        +
-        complexity_score * 0.20
-        +
+        hours_utilization * 0.50 +
+        task_load_score * 0.20 +
+        complexity_score * 0.20 +
         priority_score * 0.10
     )
+
     return {
+
+        "total_task_hours": total_task_hours,
+
         "workload_score": round(
             workload_score,
             2
         ),
+
         "hours_utilization": round(
             hours_utilization,
             2
         ),
+
         "task_load_score": round(
             task_load_score,
             2
         ),
+
         "complexity_score": complexity_score,
+
         "priority_score": priority_score
     }
+
 # -----------------------------
 # RESOURCE BALANCE
 # -----------------------------
@@ -169,18 +204,24 @@ def calculate_resource_balance(
         availability_score,
         workload_score
 ):
-    remaining_capacity = (
-        100 - workload_score
+
+    remaining_capacity = max(
+        100 - workload_score,
+        0
     )
+
     resource_balancing_score = (
-        availability_score * 0.5
+        availability_score * 0.50
         +
         remaining_capacity * 0.50
     )
+
     return round(
         resource_balancing_score,
         2
     )
+
+#parita 18-07
 # -----------------------------
 # FINAL PIPELINE
 # -----------------------------
@@ -234,22 +275,30 @@ def calculate_employee_scores(
     # After assigning the current task
     active_tasks = current_active_tasks + 1
 
-    # -----------------------------
-    # AVAILABILITY
-    # -----------------------------
-    availability = calculate_availability(
-        total_weekly_hours
-    )
+    # current active task from employee
+    current_assigned_days = get_total_assigned_days(emp_id)
 
+    total_assigned_days = (
+        current_assigned_days +
+        total_days
+    )
     # -----------------------------
     # WORKLOAD
     # -----------------------------
     workload = calculate_workload(
-        total_days,
+        total_assigned_days,
         total_weekly_hours,
         active_tasks,
         complexity_score,
         priority_score
+    )
+
+     # -----------------------------
+    # AVAILABILITY
+    # -----------------------------
+    availability = calculate_availability(
+        total_weekly_hours,
+        workload["total_task_hours"] # parita 18-07
     )
 
     # -----------------------------
@@ -278,7 +327,7 @@ def calculate_employee_scores(
         "total_days": total_days,
 
         "total_task_hours":
-            total_days * WORKING_HOURS_PER_DAY,
+            workload["total_task_hours"],
 
         "total_weekly_available_hours":
             total_weekly_hours,
@@ -324,3 +373,30 @@ def calculate_employee_scores(
         "final_workload_score":
             round(final_workload_score, 2)
     }
+
+#parita 18-07
+# -----------------------------
+# FETCH TOTAL ASSIGNED DAYS
+# -----------------------------
+def get_total_assigned_days(emp_id):
+    try:
+        response = (
+            supabase
+            .table("task_assignment")
+            .select("total_days")
+            .eq("emp_id", emp_id)
+            .eq("status", "Assigned")
+            .execute()
+        )
+
+        assigned_days = sum(
+            task.get("total_days") or 0
+            for task in response.data
+        )
+
+        return assigned_days
+
+    except Exception as e:
+        print(f"Assigned days error: {e}")
+        return 0
+    #parita 18-07

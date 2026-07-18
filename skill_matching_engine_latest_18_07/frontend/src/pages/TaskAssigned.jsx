@@ -338,63 +338,24 @@ function TaskAssigned() {
 
                         <label>Status</label>
 
-                        {/* <select
-
+                        <select
                             value={task.status}
-
-                            onChange={(e)=>
-
-                                updateField(
-
-                                    index,
-
-                                    "status",
-
-                                    e.target.value
-
-                                )
-
+                            onChange={(e) =>
+                                updateField(index, "status", e.target.value)
                             }
-
                         >
-
-                            <option>
-
-                                In process
-
-                            </option>
-
-                            <option>
-
-                                Extend deadline
-
-                            </option>
-
-                            <option>
-
-                                Completed
-
-                            </option>
-
+                            <option>Assigned</option>
+                            <option>In process</option>
+                            <option>Extend deadline</option>
+                            <option>Completed</option>
                         </select>
 
                         <label>
 
                             Deadline
 
-                        </label> */}
+                        </label>
 
-                        <select
-                            value={task.status || "Assigned"}
-                            onChange={(e) =>
-                                updateField(index, "status", e.target.value)
-                            }
-                        >
-                            <option value="Assigned">Assigned</option>
-                            <option value="In process">In process</option>
-                            <option value="Extend deadline">Extend deadline</option>
-                            <option value="Completed">Completed</option>
-                        </select>
 
                         <input
 
