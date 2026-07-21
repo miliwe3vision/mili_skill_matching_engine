@@ -1,0 +1,96 @@
+# ==========================================
+# Environment
+# ==========================================
+.env
+*.env
+.env.*
+*.env.*
+**/.env
+**/*.env
+**/.env.*
+**/*.env.*
+
+# ==========================================
+# Python
+# ==========================================
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*.pyc
+*.pyo
+*.pyd
+.python-version
+
+# ==========================================
+# Virtual Environments
+# ==========================================
+venv/
+.venv/
+env/
+
+# ==========================================
+# Node
+# ==========================================
+node_modules/
+**/node_modules/
+
+# ==========================================
+# Build
+# ==========================================
+build/
+dist/
+*.egg-info/
+
+# ==========================================
+# IDE
+# ==========================================
+.vscode/
+.idea/
+
+# ==========================================
+# OS
+# ==========================================
+.DS_Store
+Thumbs.db
+
+# ==========================================
+# Logs
+# ==========================================
+*.log
+
+# ==========================================
+# Jupyter
+# ==========================================
+.ipynb_checkpoints/
+
+# ==========================================
+# AI / Fine-tuned Model Files
+# ==========================================
+
+# Ignore all Hugging Face model weights
+**/model.safetensors
+**/pytorch_model.bin
+**/tf_model.h5
+**/flax_model.msgpack
+
+# Ignore optimizer/checkpoints
+**/optimizer.pt
+**/scheduler.pt
+**/trainer_state.json
+**/training_args.bin
+**/rng_state.pth
+
+# Ignore checkpoint folders
+checkpoint-*/
+**/checkpoint-*/
+
+# ==========================================
+# Keep model configuration files
+# ==========================================
+!**/config.json
+!**/tokenizer.json
+!**/tokenizer_config.json
+!**/special_tokens_map.json
+!**/vocab.txt
+!**/merges.txt
+**/train_pairs.csv
